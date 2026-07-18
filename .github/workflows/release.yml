@@ -24,7 +24,7 @@ jobs:
             levilamina_ver: ''
             artifact_suffix: '1.26.20.04'
           - game_version: '1.26.10.04'
-            levilamina_ver: '26.10.14'
+            levilamina_ver: '26.10.13'
             artifact_suffix: '1.26.10.04'
     steps:
       - name: Checkout Code

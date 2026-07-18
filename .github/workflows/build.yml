@@ -29,7 +29,7 @@ jobs:
         run: xmake repo -u
 
       - name: Configure xmake (1.26.10.04)
-        run: xmake f -a x64 -m release -p windows -y --levilamina_ver="26.10.14" -vD
+        run: xmake f -a x64 -m release -p windows -y --levilamina_ver="26.10.13" -vD
 
       - name: Build (1.26.10.04)
         run: xmake -vD
