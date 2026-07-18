@@ -4,21 +4,11 @@ on:
   pull_request:
   push:
   workflow_dispatch:
-    inputs:
-      levilamina_ver:
-        description: 'LeviLamina version (e.g. 26.10.14 for 1.26.10.04, empty for latest)'
-        required: false
-        default: ''
-  
+
 jobs:
-  build:
+  build-12610:
+    name: Build for 1.26.10.04
     runs-on: windows-latest
-    strategy:
-      matrix:
-        target: [latest]
-        include:
-          - target: latest
-            levilamina_ver: ''  # 默认构建最新版本 (1.26.20.04)
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -31,21 +21,15 @@ jobs:
         with:
           path: |
             ~/AppData/Local/.xmake
-          key: xmake-${{ hashFiles('xmake.lua') }}
+          key: xmake-12610-${{ hashFiles('xmake.lua') }}
           restore-keys: |
-            xmake-
+            xmake-12610-
 
       - name: Update xmake repository
         run: xmake repo -u
 
-      - name: Configure xmake
-        run: |
-          if "${{ github.event.inputs.levilamina_ver || '' }}" != "" ; then
-            xmake f -a x64 -m release -p windows -y --levilamina_ver="${{ github.event.inputs.levilamina_ver }}"
-          else
-            xmake f -a x64 -m release -p windows -y
-          fi
-        shell: bash
+      - name: Configure xmake (1.26.10.04)
+        run: xmake f -a x64 -m release -p windows -y --levilamina_ver="26.10.14"
 
       - name: Build
         run: xmake
@@ -53,5 +37,39 @@ jobs:
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.event.repository.name }}-${{ github.sha }}-client-windows-x64
+          name: ChiyanMap-1.26.10.04
+          path: bin/
+
+  build-12620:
+    name: Build for 1.26.20.04
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup xmake
+        uses: xmake-io/github-action-setup-xmake@v1
+      
+      - name: Cache xmake dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/AppData/Local/.xmake
+          key: xmake-12620-${{ hashFiles('xmake.lua') }}
+          restore-keys: |
+            xmake-12620-
+
+      - name: Update xmake repository
+        run: xmake repo -u
+
+      - name: Configure xmake (1.26.20.04)
+        run: xmake f -a x64 -m release -p windows -y
+
+      - name: Build
+        run: xmake
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ChiyanMap-1.26.20.04
           path: bin/
