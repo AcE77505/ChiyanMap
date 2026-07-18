@@ -29,10 +29,11 @@ jobs:
         run: xmake repo -u
 
       - name: Configure xmake (1.26.10.04)
-        run: xmake f -a x64 -m release -p windows -y --levilamina_ver="26.10.14"
+        run: xmake f -a x64 -m release -p windows -y --levilamina_ver="26.10.14" -vD
 
-      - name: Build
-        run: xmake
+      - name: Build (1.26.10.04)
+        run: xmake -vD
+        timeout-minutes: 60
 
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
