@@ -21,9 +21,9 @@ jobs:
         with:
           path: |
             ~/AppData/Local/.xmake
-          key: xmake-12610-${{ hashFiles('xmake.lua') }}
+          key: xmake-${{ hashFiles('xmake.lua') }}
           restore-keys: |
-            xmake-12610-
+            xmake-
 
       - name: Update xmake repository
         run: xmake repo -u
@@ -55,9 +55,9 @@ jobs:
         with:
           path: |
             ~/AppData/Local/.xmake
-          key: xmake-12620-${{ hashFiles('xmake.lua') }}
+          key: xmake-${{ hashFiles('xmake.lua') }}
           restore-keys: |
-            xmake-12620-
+            xmake-
 
       - name: Update xmake repository
         run: xmake repo -u
