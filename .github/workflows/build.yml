@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       levilamina_ver:
-        description: 'LeviLamina version (e.g. v26.10.14 for 1.26.10.04, empty for latest)'
+        description: 'LeviLamina version (e.g. 26.10.14 for 1.26.10.04, empty for latest)'
         required: false
         default: ''
   
