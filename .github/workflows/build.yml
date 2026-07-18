@@ -4,10 +4,21 @@ on:
   pull_request:
   push:
   workflow_dispatch:
+    inputs:
+      levilamina_ver:
+        description: 'LeviLamina version (e.g. v26.10.14 for 1.26.10.04, empty for latest)'
+        required: false
+        default: ''
   
 jobs:
   build:
     runs-on: windows-latest
+    strategy:
+      matrix:
+        target: [latest]
+        include:
+          - target: latest
+            levilamina_ver: ''  # 默认构建最新版本 (1.26.20.04)
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -27,9 +38,14 @@ jobs:
       - name: Update xmake repository
         run: xmake repo -u
 
-      - name: Configure xmake (Client Only)
-        # 去除了 --target_type 参数，因为 xmake.lua 已经硬编码为纯客户端模式
-        run: xmake f -a x64 -m release -p windows -y
+      - name: Configure xmake
+        run: |
+          if "${{ github.event.inputs.levilamina_ver || '' }}" != "" ; then
+            xmake f -a x64 -m release -p windows -y --levilamina_ver="${{ github.event.inputs.levilamina_ver }}"
+          else
+            xmake f -a x64 -m release -p windows -y
+          fi
+        shell: bash
 
       - name: Build
         run: xmake

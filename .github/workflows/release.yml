@@ -5,12 +5,27 @@ on:
     tags:
       - v* # 匹配类似 v1.0 
       - v*.*.* # 明确匹配类似 v0.1.1 的语义化版本号
-  workflow_dispatch: # 【新增】允许你在 Actions 网页端手动点击运行
+  workflow_dispatch:
+    inputs:
+      levilamina_ver:
+        description: 'LeviLamina version (e.g. v26.10.14 for 1.26.10.04, empty for latest)'
+        required: false
+        default: ''
 
 jobs:
   build:
     name: Build Project
     runs-on: windows-latest
+    strategy:
+      matrix:
+        game_version: ['1.26.20.04', '1.26.10.04']
+        include:
+          - game_version: '1.26.20.04'
+            levilamina_ver: ''
+            artifact_suffix: '1.26.20.04'
+          - game_version: '1.26.10.04'
+            levilamina_ver: 'v26.10.14'
+            artifact_suffix: '1.26.10.04'
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -22,45 +37,63 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/AppData/Local/.xmake
-          key: xmake-${{ hashFiles('xmake.lua') }}
+          key: xmake-${{ hashFiles('xmake.lua') }}-${{ matrix.artifact_suffix }}
           restore-keys: xmake-
 
       - name: Update xmake repository
         run: xmake repo -u
 
-      - name: Configure xmake (Client Only)
-        run: xmake f -a x64 -m release -p windows -y
+      - name: Configure xmake (${{ matrix.game_version }})
+        run: |
+          if [ "${{ matrix.levilamina_ver }}" != "" ]; then
+            xmake f -a x64 -m release -p windows -y --levilamina_ver="${{ matrix.levilamina_ver }}"
+          else
+            xmake f -a x64 -m release -p windows -y
+          fi
+        shell: bash
 
-      - name: Build
+      - name: Build (${{ matrix.game_version }})
         run: xmake
+
+      - name: Rename Output
+        run: |
+          if [ -d "bin" ]; then
+            mv bin "bin-${{ matrix.artifact_suffix }}"
+          fi
+        shell: bash
 
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: build-artifact
-          path: bin/
+          name: build-artifact-${{ matrix.artifact_suffix }}
+          path: bin-${{ matrix.artifact_suffix }}/
 
   release:
     name: Create Release
     needs: build
     permissions:
-      contents: write # 授予自动创建 Release 的写权限
+      contents: write
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Download Build Artifact
+      - name: Download All Artifacts
         uses: actions/download-artifact@v4
         with:
-          name: build-artifact
-          path: artifact
+          pattern: build-artifact-*
+          merge-multiple: false
 
-      - name: Package Release Archive
+      - name: Package Release Archives
         run: |
-          cp CHANGELOG.md LICENSE README.md artifact/ 2>/dev/null || true
-          cd artifact
-          zip -r ../${{ github.event.repository.name }}-client-windows-x64.zip *
+          for dir in build-artifact-*/; do
+            suffix="${dir#build-artifact-}"
+            suffix="${suffix%/}"
+            cp CHANGELOG.md LICENSE README.md "$dir/" 2>/dev/null || true
+            cd "$dir"
+            zip -r "../${{ github.event.repository.name }}-client-windows-x64-${suffix}.zip" *
+            cd ..
+          done
 
       - name: Extract Release Notes
         id: extract-release-notes
@@ -70,9 +103,10 @@ jobs:
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name }} 
+          tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
           body: ${{ steps.extract-release-notes.outputs.release_notes || '系统自动发布的客户端版本。' }}
-          files: ${{ github.event.repository.name }}-client-windows-x64.zip
+          files: |
+            ${{ github.event.repository.name }}-client-windows-x64-*.zip
           draft: false
           prerelease: false

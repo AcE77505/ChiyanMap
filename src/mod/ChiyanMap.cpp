@@ -77,8 +77,9 @@ bool ChiyanMap::load() {
             }
         }
 
-        // 使用底层原始字符串精准匹配，严格锁定
-        if (rawVer != "1.26.20-4") {
+        // 使用底层原始字符串精准匹配，支持 1.26.x.x 系列
+        // 当前已适配版本：1.26.10.04, 1.26.20.04
+        if (rawVer != "1.26.20-4" && rawVer != "1.26.10-4") {
             getSelf().getLogger().error("{}: {}", LanguageManager::GetText("LOG_VERSION_MISMATCH"), displayVer);
             getSelf().getLogger().error("{}", LanguageManager::GetText("LOG_VERSION_STRICT"));
             getSelf().getLogger().error("{}", LanguageManager::GetText("LOG_VERSION_ABORT"));

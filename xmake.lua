@@ -2,8 +2,25 @@ add_rules("mode.debug", "mode.release")
 
 add_repositories("levimc-repo https://github.com/LiteLDev/xmake-repo.git")
 
+-- 构建选项：指定 LeviLamina 版本（如 v26.10.14 则编译为 1.26.10.04 兼容）
+option("levilamina_ver")
+    set_default("")
+    set_showmenu(true)
+    set_description("Specify LeviLamina version (e.g. v26.10.14 for game 1.26.10.04)")
+option_end()
+
 -- 移除 target_type 选项配置，直接强制 LeviLamina 为 client 端
-add_requires("levilamina", {configs = {target_type = "client"}})
+-- 如需指定版本（如为 1.26.10.04 编译），在 xmake 命令后追加:
+--   xmake f --levilamina_ver="v26.10.14"
+-- 支持的版本系列:
+--   v26.10.x = 游戏 1.26.10.04
+--   v26.20.x = 游戏 1.26.20.04
+local levilamina_ver = get_config("levilamina_ver") or ""
+if levilamina_ver ~= "" then
+    add_requires("levilamina " .. levilamina_ver, {configs = {target_type = "client"}})
+else
+    add_requires("levilamina", {configs = {target_type = "client"}})
+end
 
 add_requires("levibuildscript")
 add_requires("imgui", {configs = {shared = false, win32 = true, dx11 = true}})
